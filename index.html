@@ -7,28 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['Space Grotesk', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
                     colors: {
-                        dark: {
-                            900: '#080810',
-                            800: '#0f0f1a',
-                            700: '#161625',
-                            600: '#1e1e30',
-                            500: '#26263c',
-                        },
-                        accent: {
-                            DEFAULT: '#00d4ff',
-                            dim:     '#0099bb',
-                        },
+                        dark: { 900: '#060612', 800: '#0c0c1e', 700: '#121228', 600: '#1a1a35', 500: '#22223f' },
+                        accent: { DEFAULT: '#00d4ff', dim: '#0099bb', glow: 'rgba(0,212,255,0.15)' },
                         positive: '#00ff88',
                         negative: '#ff4757',
-                        neutral:  '#ffa502',
+                        neutral: '#ffa502',
                     }
                 }
             }
@@ -36,396 +27,315 @@
     </script>
     <style>
         * { box-sizing: border-box; }
-        body { background: #080810; font-family: 'Inter', sans-serif; }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0f0f1a; }
+        body { background: #060612; font-family: 'Space Grotesk', sans-serif; }
+        ::-webkit-scrollbar { width: 3px; height: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #00d4ff33; border-radius: 2px; }
-
-        .glass {
-            background: rgba(255,255,255,0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.06);
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
         }
-
-        .glow {
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
-        }
-
-        .glow-strong {
-            box-shadow: 0 0 40px rgba(0, 212, 255, 0.15);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #00d4ff, #0099bb);
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 0 24px rgba(0, 212, 255, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .kpi-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            transition: all 0.2s ease;
-        }
-
-        .kpi-card:hover {
-            border-color: rgba(0, 212, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.06);
-        }
-
-        .upload-zone {
-            border: 2px dashed rgba(0, 212, 255, 0.2);
-            transition: all 0.2s ease;
-        }
-
-        .upload-zone:hover, .upload-zone.drag-over {
-            border-color: rgba(0, 212, 255, 0.5);
-            background: rgba(0, 212, 255, 0.04);
-        }
-
-        .insight-section {
-            border-left: 2px solid rgba(0, 212, 255, 0.3);
-        }
-
-        .sidebar-link {
-            transition: all 0.15s ease;
-            border-left: 2px solid transparent;
-        }
-
-        .sidebar-link:hover, .sidebar-link.active {
-            background: rgba(0, 212, 255, 0.06);
-            border-left-color: #00d4ff;
-            color: #00d4ff;
-        }
-
-        .spinner {
-            border: 2px solid rgba(0, 212, 255, 0.1);
-            border-top-color: #00d4ff;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 0.8s linear infinite;
-        }
-
+        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.07); }
+        .glass-strong { background: rgba(0,212,255,0.04); backdrop-filter: blur(20px); border: 1px solid rgba(0,212,255,0.15); }
+        .btn-primary { background: linear-gradient(135deg, #00d4ff, #0099bb); transition: all 0.2s ease; }
+        .btn-primary:hover { box-shadow: 0 0 28px rgba(0,212,255,0.45); transform: translateY(-1px); }
+        .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+        .kpi-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); transition: all 0.25s ease; position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(0,212,255,0.4), transparent); }
+        .kpi-card:hover { border-color: rgba(0,212,255,0.25); box-shadow: 0 0 24px rgba(0,212,255,0.07); transform: translateY(-2px); }
+        .upload-zone { border: 2px dashed rgba(0,212,255,0.2); transition: all 0.2s ease; }
+        .upload-zone:hover, .upload-zone.drag-over { border-color: rgba(0,212,255,0.55); background: rgba(0,212,255,0.04); }
+        .sidebar-link { transition: all 0.15s ease; border-left: 2px solid transparent; position: relative; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(0,212,255,0.07); border-left-color: #00d4ff; color: #00d4ff; }
+        .sidebar-link.active::after { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 4px; border-radius: 50%; background: #00d4ff; box-shadow: 0 0 8px #00d4ff; }
+        .spinner { border: 2px solid rgba(0,212,255,0.1); border-top-color: #00d4ff; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .fade-in {
-            animation: fadeIn 0.4s ease;
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chart-container { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; overflow: hidden; }
+        .status-dot-online { background: #00ff88; animation: pulse-green 2s infinite; }
+        .status-dot-offline { background: #ff4757; }
+        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); } 70% { box-shadow: 0 0 0 6px rgba(0,255,136,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0); } }
+        .mobile-nav { display: none; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 25; backdrop-filter: blur(4px); }
+        @media (max-width: 768px) {
+            .sidebar-desktop { transform: translateX(-100%); transition: transform 0.3s ease; }
+            .sidebar-desktop.open { transform: translateX(0); }
+            .sidebar-overlay.open { display: block; }
+            .main-content { margin-left: 0 !important; }
+            .mobile-nav { display: flex; }
+            .header-menu-btn { display: flex !important; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; }
+            .chart-grid-2 { grid-template-columns: 1fr !important; }
+            .insight-grid { grid-template-columns: 1fr !important; }
+            .p-desktop { padding: 1rem !important; }
+            .header-px { padding-left: 1rem !important; padding-right: 1rem !important; }
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .chart-container {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-radius: 12px;
-            overflow: hidden;
-        }
+        @media (min-width: 769px) { .header-menu-btn { display: none !important; } }
+        .num { font-family: 'JetBrains Mono', monospace; }
+        .section-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; }
     </style>
 </head>
 <body class="text-gray-200 min-h-screen" x-data="app()">
 
-    <div class="flex min-h-screen">
+    <div class="sidebar-overlay" :class="sidebarOpen ? 'open' : ''" @click="sidebarOpen = false"></div>
 
-        <!-- Sidebar -->
-        <aside class="w-56 min-h-screen flex flex-col fixed left-0 top-0 z-20"
-               style="background: #0a0a15; border-right: 1px solid rgba(255,255,255,0.05);">
+    <div class="flex min-h-screen relative z-10">
 
-            <!-- Logo -->
-            <div class="px-6 py-5 border-b border-white border-opacity-5">
+        <aside class="sidebar-desktop w-60 min-h-screen flex flex-col fixed left-0 top-0 z-30"
+               :class="sidebarOpen ? 'open' : ''"
+               style="background: rgba(8,8,22,0.95); border-right: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px);">
+            <div class="px-5 py-5 border-b border-white border-opacity-5">
                 <div class="flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-lg btn-primary flex items-center justify-center">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                            <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z"/>
-                        </svg>
+                    <div class="w-8 h-8 rounded-xl btn-primary flex items-center justify-center flex-shrink-0" style="box-shadow: 0 0 16px rgba(0,212,255,0.3)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 3h2v-2h2v2h2v2h-2v2h-2v-2h-2z"/></svg>
                     </div>
                     <div>
-                        <div class="text-sm font-semibold text-white">BizAnalytic</div>
-                        <div class="text-xs text-gray-500">AI Platform</div>
+                        <div class="text-sm font-bold text-white tracking-wide">BizAnalytic</div>
+                        <div class="text-xs text-gray-500 font-mono">AI Platform v1.0</div>
                     </div>
                 </div>
             </div>
-
-            <!-- Nav -->
-            <nav class="flex-1 px-3 py-4 space-y-1">
-                <button @click="activeSection = 'dashboard'"
-                        :class="activeSection === 'dashboard' ? 'active' : ''"
-                        class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
-                    </svg>
+            <nav class="flex-1 px-3 py-5 space-y-1">
+                <p class="section-label text-gray-600 px-3 mb-3">Navigation</p>
+                <button @click="activeSection = 'dashboard'; sidebarOpen = false" :class="activeSection === 'dashboard' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                     Dashboard
                 </button>
-
-                <button @click="activeSection = 'upload'"
-                        :class="activeSection === 'upload' ? 'active' : ''"
-                        class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
-                    </svg>
+                <button @click="activeSection = 'upload'; sidebarOpen = false" :class="activeSection === 'upload' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
                     Upload Data
                 </button>
-
-                <button @click="activeSection = 'insight'"
-                        :class="activeSection === 'insight' ? 'active' : ''"
-                        class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                    </svg>
+                <button @click="activeSection = 'insight'; sidebarOpen = false" :class="activeSection === 'insight' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                     AI Insight
                 </button>
-
-                <button @click="activeSection = 'charts'"
-                        :class="activeSection === 'charts' ? 'active' : ''"
-                        class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
-                    </svg>
+                <button @click="activeSection = 'charts'; sidebarOpen = false" :class="activeSection === 'charts' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
                     Charts
                 </button>
             </nav>
-
-            <!-- Status -->
             <div class="px-4 py-4 border-t border-white border-opacity-5">
-                <div class="flex items-center gap-2">
-                    <div class="w-1.5 h-1.5 rounded-full"
-                         :class="apiStatus === 'online' ? 'bg-positive' : 'bg-negative'"></div>
-                    <span class="text-xs text-gray-500" x-text="apiStatus === 'online' ? 'API Online' : 'API Offline'"></span>
+                <div class="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+                    <div class="w-2 h-2 rounded-full flex-shrink-0" :class="apiStatus === 'online' ? 'status-dot-online' : 'status-dot-offline'"></div>
+                    <div>
+                        <p class="text-xs font-medium" :class="apiStatus === 'online' ? 'text-green-400' : 'text-red-400'" x-text="apiStatus === 'online' ? 'API Online' : 'API Offline'"></p>
+                        <p class="text-xs text-gray-600 font-mono">railway.app</p>
+                    </div>
+                    <button @click="checkApi()" class="ml-auto text-gray-600 hover:text-accent transition-colors">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                    </button>
                 </div>
             </div>
         </aside>
 
-        <!-- Main -->
-        <main class="flex-1 ml-56 min-h-screen">
-
-            <!-- Header -->
-            <header class="sticky top-0 z-10 px-8 py-4 flex items-center justify-between"
-                    style="background: rgba(8,8,16,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div>
-                    <h1 class="text-base font-semibold text-white" x-text="sectionTitle()"></h1>
-                    <p class="text-xs text-gray-500 mt-0.5">AI-powered business intelligence</p>
+        <main class="main-content flex-1 md:ml-60 min-h-screen">
+            <header class="sticky top-0 z-10 header-px px-6 py-3.5 flex items-center justify-between"
+                    style="background: rgba(6,6,18,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <button class="header-menu-btn items-center justify-center w-8 h-8 rounded-lg glass text-gray-400 hover:text-accent transition-colors mr-3" @click="sidebarOpen = !sidebarOpen">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+                </button>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-sm font-bold text-white" x-text="sectionTitle()"></h1>
+                        <span class="hidden sm:inline text-xs text-gray-600">·</span>
+                        <p class="hidden sm:inline text-xs text-gray-500">AI-powered business intelligence</p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <template x-if="result">
-                        <button @click="exportReport()"
-                                class="px-3 py-1.5 rounded-lg text-xs font-medium text-accent border border-accent border-opacity-30 hover:bg-accent hover:bg-opacity-10 transition-all">
-                            Export Report
+                        <button @click="exportReport()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-accent border border-accent border-opacity-30 hover:bg-accent hover:bg-opacity-10 transition-all flex items-center gap-1.5">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            <span class="hidden sm:inline">Export</span>
                         </button>
                     </template>
-                    <div class="w-7 h-7 rounded-lg glass flex items-center justify-center text-xs text-gray-400">
-                        AI
-                    </div>
+                    <div class="w-8 h-8 rounded-lg glass-strong flex items-center justify-center text-xs font-bold text-accent font-mono">AI</div>
                 </div>
             </header>
 
-            <!-- Content -->
-            <div class="p-8">
+            <div class="p-desktop p-6">
 
-                <!-- Upload Section -->
                 <div x-show="activeSection === 'upload' || activeSection === 'dashboard'" class="fade-in">
-
-                    <!-- Upload Zone -->
-                    <div class="upload-zone rounded-2xl p-10 text-center cursor-pointer mb-8"
+                    <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer mb-5"
                          @click="$refs.fileInput.click()"
                          @dragover.prevent="$el.classList.add('drag-over')"
                          @dragleave="$el.classList.remove('drag-over')"
                          @drop.prevent="handleDrop($event)">
-
-                        <input type="file" accept=".csv" x-ref="fileInput"
-                               @change="handleFileSelect($event)" class="hidden">
-
-                        <div class="w-12 h-12 rounded-xl btn-primary mx-auto mb-4 flex items-center justify-center">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
-                            </svg>
+                        <input type="file" accept=".csv" x-ref="fileInput" @change="handleFileSelect($event)" class="hidden">
+                        <div class="w-12 h-12 rounded-xl btn-primary mx-auto mb-3 flex items-center justify-center" style="box-shadow: 0 0 20px rgba(0,212,255,0.3)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
                         </div>
-
                         <template x-if="!selectedFile">
                             <div>
-                                <p class="text-sm font-medium text-gray-300">Drop CSV file here or click to browse</p>
-                                <p class="text-xs text-gray-600 mt-1">Supports any CSV format — sales, transactions, reviews, invoices</p>
+                                <p class="text-sm font-semibold text-gray-300">Drop CSV file or tap to browse</p>
+                                <p class="text-xs text-gray-600 mt-1">Sales · Transactions · Reviews · Invoices</p>
                             </div>
                         </template>
-
                         <template x-if="selectedFile">
                             <div>
-                                <p class="text-sm font-medium text-white" x-text="selectedFile.name"></p>
-                                <p class="text-xs text-accent mt-1" x-text="formatFileSize(selectedFile.size)"></p>
+                                <p class="text-sm font-bold text-white" x-text="selectedFile.name"></p>
+                                <p class="text-xs text-accent mt-1 num" x-text="formatFileSize(selectedFile.size)"></p>
                             </div>
                         </template>
                     </div>
 
-                    <!-- Analyze Button -->
-                    <button @click="analyze()"
-                            :disabled="!selectedFile || loading"
-                            class="btn-primary w-full py-3 rounded-xl text-sm font-semibold text-dark-900 flex items-center justify-center gap-2 mb-8">
-                        <template x-if="loading">
-                            <div class="spinner"></div>
-                        </template>
+                    <button @click="analyze()" :disabled="!selectedFile || loading"
+                            class="btn-primary w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 mb-5" style="color: #060612">
+                        <template x-if="loading"><div class="spinner"></div></template>
                         <span x-text="loading ? 'Analyzing...' : 'Run Analysis'"></span>
                     </button>
 
-                    <!-- Error -->
                     <template x-if="error">
-                        <div class="rounded-xl p-4 mb-8 text-sm text-negative"
-                             style="background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.2);"
-                             x-text="error">
-                        </div>
+                        <div class="rounded-xl p-4 mb-5 text-sm" style="background: rgba(255,71,87,0.08); border: 1px solid rgba(255,71,87,0.2); color: #ff4757;" x-text="error"></div>
                     </template>
 
-                    <!-- KPI Cards -->
                     <template x-if="result">
                         <div class="fade-in">
-                            <div class="grid grid-cols-4 gap-4 mb-8">
-
+                            <p class="section-label text-gray-600 mb-3">Overview</p>
+                            <div class="kpi-grid grid grid-cols-4 gap-3 mb-6">
                                 <div class="kpi-card rounded-xl p-4">
                                     <p class="text-xs text-gray-500 mb-1">Total Rows</p>
-                                    <p class="text-2xl font-bold text-white" x-text="result.profile.shape.rows.toLocaleString()"></p>
-                                    <p class="text-xs text-gray-600 mt-1">records loaded</p>
+                                    <p class="text-xl font-bold text-white num" x-text="result.profile.shape.rows.toLocaleString()"></p>
+                                    <p class="text-xs text-gray-600 mt-1">records</p>
                                 </div>
-
                                 <div class="kpi-card rounded-xl p-4">
                                     <p class="text-xs text-gray-500 mb-1">Columns</p>
-                                    <p class="text-2xl font-bold text-white" x-text="result.profile.shape.columns"></p>
+                                    <p class="text-xl font-bold text-white num" x-text="result.profile.shape.columns"></p>
                                     <p class="text-xs text-gray-600 mt-1">detected</p>
                                 </div>
-
                                 <div class="kpi-card rounded-xl p-4">
                                     <p class="text-xs text-gray-500 mb-1">Anomalies</p>
-                                    <p class="text-2xl font-bold"
-                                       :class="Object.keys(result.anomalies).length > 0 ? 'text-negative' : 'text-positive'"
-                                       x-text="Object.keys(result.anomalies).length > 0 ? Object.values(result.anomalies)[0].count : 0"></p>
-                                    <p class="text-xs text-gray-600 mt-1">rows flagged</p>
+                                    <p class="text-xl font-bold num" :class="Object.keys(result.anomalies).length > 0 ? 'text-red-400' : 'text-green-400'" x-text="Object.keys(result.anomalies).length > 0 ? Object.values(result.anomalies)[0].count : 0"></p>
+                                    <p class="text-xs text-gray-600 mt-1">flagged</p>
                                 </div>
-
                                 <div class="kpi-card rounded-xl p-4">
                                     <p class="text-xs text-gray-500 mb-1">Sentiment</p>
-                                    <p class="text-2xl font-bold text-positive"
-                                       x-text="result.sentiment.distribution ? result.sentiment.distribution.positive + ' pos' : 'N/A'"></p>
-                                    <p class="text-xs text-gray-600 mt-1">positive reviews</p>
+                                    <p class="text-xl font-bold text-green-400 num" x-text="result.sentiment.distribution ? result.sentiment.distribution.positive + ' pos' : 'N/A'"></p>
+                                    <p class="text-xs text-gray-600 mt-1">positive</p>
                                 </div>
                             </div>
                         </div>
                     </template>
                 </div>
 
-                <!-- Charts Section -->
                 <template x-if="result && (activeSection === 'charts' || activeSection === 'dashboard')">
-                    <div class="fade-in space-y-6">
-
-                        <div class="grid grid-cols-2 gap-6">
+                    <div class="fade-in space-y-4">
+                        <p class="section-label text-gray-600">Visualizations</p>
+                        <div class="chart-grid-2 grid grid-cols-2 gap-4">
                             <div class="chart-container p-4">
-                                <p class="text-xs font-medium text-gray-400 mb-3">Rating Distribution</p>
-                                <div id="chart-rating" style="height: 260px;"></div>
+                                <p class="text-xs font-semibold text-gray-400 mb-3">Rating Distribution</p>
+                                <div id="chart-rating" style="height: 220px;"></div>
                             </div>
                             <div class="chart-container p-4">
-                                <p class="text-xs font-medium text-gray-400 mb-3">Sentiment Distribution</p>
-                                <div id="chart-sentiment" style="height: 260px;"></div>
+                                <p class="text-xs font-semibold text-gray-400 mb-3">Sentiment Distribution</p>
+                                <div id="chart-sentiment" style="height: 220px;"></div>
                             </div>
                         </div>
-
                         <div class="chart-container p-4">
-                            <p class="text-xs font-medium text-gray-400 mb-3">Sentiment per Aspect</p>
-                            <div id="chart-aspect" style="height: 280px;"></div>
+                            <p class="text-xs font-semibold text-gray-400 mb-3">Sentiment per Aspect</p>
+                            <div id="chart-aspect" style="height: 240px;"></div>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-6">
+                        <div class="chart-grid-2 grid grid-cols-2 gap-4">
                             <div class="chart-container p-4">
-                                <p class="text-xs font-medium text-gray-400 mb-3">3D Scatter: Rating vs Sentiment vs Review Length</p>
-                                <div id="chart-3d" style="height: 340px;"></div>
+                                <p class="text-xs font-semibold text-gray-400 mb-3">3D Scatter</p>
+                                <div id="chart-3d" style="height: 280px;"></div>
                             </div>
                             <div class="chart-container p-4">
-                                <p class="text-xs font-medium text-gray-400 mb-3">Surface Plot</p>
-                                <div id="chart-surface" style="height: 340px;"></div>
+                                <p class="text-xs font-semibold text-gray-400 mb-3">Surface Plot</p>
+                                <div id="chart-surface" style="height: 280px;"></div>
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-6">
+                        <div class="chart-grid-2 grid grid-cols-2 gap-4">
                             <div class="chart-container p-4">
-                                <p class="text-xs font-medium text-gray-400 mb-3">Top Keywords</p>
-                                <div id="chart-keywords" style="height: 280px;"></div>
+                                <p class="text-xs font-semibold text-gray-400 mb-3">Top Keywords</p>
+                                <div id="chart-keywords" style="height: 240px;"></div>
                             </div>
                             <div class="chart-container p-4">
-                                <p class="text-xs font-medium text-gray-400 mb-3">Anomaly Detection</p>
-                                <div id="chart-anomaly" style="height: 280px;"></div>
+                                <p class="text-xs font-semibold text-gray-400 mb-3">Anomaly Detection</p>
+                                <div id="chart-anomaly" style="height: 240px;"></div>
                             </div>
                         </div>
                     </div>
                 </template>
 
-                <!-- AI Insight Section -->
                 <template x-if="result && (activeSection === 'insight' || activeSection === 'dashboard')">
-                    <div class="fade-in space-y-4 mt-6">
-
-                        <div class="glass rounded-2xl p-6 glow">
-                            <div class="flex items-center gap-3 mb-6">
-                                <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                                    </svg>
+                    <div class="fade-in space-y-4 mt-4">
+                        <p class="section-label text-gray-600">AI Analysis</p>
+                        <div class="glass rounded-2xl p-5" style="border-color: rgba(0,212,255,0.12); box-shadow: 0 0 30px rgba(0,212,255,0.05)">
+                            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-white border-opacity-5">
+                                <div class="w-9 h-9 rounded-xl btn-primary flex items-center justify-center flex-shrink-0" style="box-shadow: 0 0 14px rgba(0,212,255,0.3)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-white">AI Analyst</p>
-                                    <p class="text-xs text-gray-500">Powered by Groq LLaMA 3.3 70B</p>
+                                    <p class="text-sm font-bold text-white">AI Analyst</p>
+                                    <p class="text-xs text-gray-500 font-mono">Groq · LLaMA 3.3 70B</p>
                                 </div>
                             </div>
-
-                            <div class="grid grid-cols-2 gap-6">
-
-                                <div class="space-y-1">
-                                    <p class="text-xs font-medium text-accent uppercase tracking-wider">Summary</p>
-                                    <div class="insight-section pl-4 pt-2">
-                                        <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.summary"></p>
-                                    </div>
+                            <div class="insight-grid grid grid-cols-2 gap-4">
+                                <div class="glass rounded-xl p-4">
+                                    <p class="section-label text-accent mb-3">Summary</p>
+                                    <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.summary"></p>
                                 </div>
-
-                                <div class="space-y-1">
-                                    <p class="text-xs font-medium text-negative uppercase tracking-wider">Anomaly Flags</p>
-                                    <div class="insight-section pl-4 pt-2" style="border-left-color: rgba(255,71,87,0.4)">
-                                        <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.anomaly_flags"></p>
-                                    </div>
+                                <div class="glass rounded-xl p-4">
+                                    <p class="section-label text-red-400 mb-3">Anomaly Flags</p>
+                                    <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.anomaly_flags"></p>
                                 </div>
-
-                                <div class="space-y-1">
-                                    <p class="text-xs font-medium text-neutral uppercase tracking-wider">Sentiment Analysis</p>
-                                    <div class="insight-section pl-4 pt-2" style="border-left-color: rgba(255,165,2,0.4)">
-                                        <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.sentiment"></p>
-                                    </div>
+                                <div class="glass rounded-xl p-4">
+                                    <p class="section-label text-yellow-400 mb-3">Sentiment Analysis</p>
+                                    <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.sentiment"></p>
                                 </div>
-
-                                <div class="space-y-1">
-                                    <p class="text-xs font-medium text-positive uppercase tracking-wider">Recommendations</p>
-                                    <div class="insight-section pl-4 pt-2" style="border-left-color: rgba(0,255,136,0.4)">
-                                        <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.recommendations"></p>
-                                    </div>
+                                <div class="glass rounded-xl p-4">
+                                    <p class="section-label text-green-400 mb-3">Recommendations</p>
+                                    <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.recommendations"></p>
                                 </div>
                             </div>
-
-                            <div class="mt-6 space-y-1">
-                                <p class="text-xs font-medium text-accent uppercase tracking-wider">Strategy</p>
-                                <div class="insight-section pl-4 pt-2">
-                                    <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.strategy"></p>
-                                </div>
+                            <div class="glass rounded-xl p-4 mt-4">
+                                <p class="section-label text-accent mb-3">Strategy</p>
+                                <p class="text-sm text-gray-300 leading-relaxed" x-text="result.insight.strategy"></p>
                             </div>
                         </div>
+                    </div>
+                </template>
+
+                <template x-if="!result && (activeSection === 'insight' || activeSection === 'charts')">
+                    <div class="fade-in flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-4 text-gray-600">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-400">No data yet</p>
+                        <p class="text-xs text-gray-600 mt-1">Upload a CSV and run analysis first</p>
+                        <button @click="activeSection = 'upload'" class="mt-4 px-4 py-2 rounded-lg btn-primary text-xs font-bold" style="color: #060612">Upload Data</button>
                     </div>
                 </template>
 
             </div>
+
+            <nav class="mobile-nav fixed bottom-0 left-0 right-0 z-20 px-4 py-2 justify-around items-center"
+                 style="background: rgba(8,8,22,0.95); border-top: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px);">
+                <button @click="activeSection = 'dashboard'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'dashboard' ? 'text-accent' : 'text-gray-500'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                    <span class="text-xs">Dashboard</span>
+                </button>
+                <button @click="activeSection = 'upload'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'upload' ? 'text-accent' : 'text-gray-500'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                    <span class="text-xs">Upload</span>
+                </button>
+                <button @click="activeSection = 'insight'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'insight' ? 'text-accent' : 'text-gray-500'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="text-xs">Insight</span>
+                </button>
+                <button @click="activeSection = 'charts'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'charts' ? 'text-accent' : 'text-gray-500'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+                    <span class="text-xs">Charts</span>
+                </button>
+            </nav>
+            <div class="mobile-nav h-16"></div>
         </main>
     </div>
 
@@ -440,23 +350,27 @@
                 error         : null,
                 result        : null,
                 apiStatus     : 'offline',
+                sidebarOpen   : false,
 
                 async init() {
+                    await this.checkApi()
+                    setInterval(() => this.checkApi(), 30000)
+                },
+
+                async checkApi() {
                     try {
-                        const res = await fetch('https://businessanalytic.up.railway.app/')
-                        if (res.ok) this.apiStatus = 'online'
+                        const res = await fetch('https://businessanalytic.up.railway.app/', {
+                            method: 'GET',
+                            signal: AbortSignal.timeout(5000)
+                        })
+                        this.apiStatus = res.ok ? 'online' : 'offline'
                     } catch {
                         this.apiStatus = 'offline'
                     }
                 },
 
                 sectionTitle() {
-                    const map = {
-                        dashboard: 'Dashboard',
-                        upload   : 'Upload Data',
-                        insight  : 'AI Insight',
-                        charts   : 'Charts'
-                    }
+                    const map = { dashboard: 'Dashboard', upload: 'Upload Data', insight: 'AI Insight', charts: 'Charts' }
                     return map[this.activeSection] || 'Dashboard'
                 },
 
@@ -467,9 +381,7 @@
 
                 handleDrop(e) {
                     const file = e.dataTransfer.files[0]
-                    if (file && file.name.endsWith('.csv')) {
-                        this.selectedFile = file
-                    }
+                    if (file && file.name.endsWith('.csv')) this.selectedFile = file
                 },
 
                 formatFileSize(bytes) {
@@ -480,29 +392,21 @@
 
                 async analyze() {
                     if (!this.selectedFile || this.loading) return
-
                     this.loading = true
                     this.error   = null
                     this.result  = null
-
                     const formData = new FormData()
                     formData.append('file', this.selectedFile)
-
                     try {
-                        const res = await fetch(`${API_BASE}/analyze`, {
-                            method: 'POST',
-                            body  : formData
-                        })
-
+                        const res = await fetch(`${API_BASE}/analyze`, { method: 'POST', body: formData })
                         if (!res.ok) {
                             const err = await res.json()
                             throw new Error(err.detail || 'Analysis failed')
                         }
-
                         this.result = await res.json()
+                        this.apiStatus = 'online'
                         this.activeSection = 'dashboard'
                         this.$nextTick(() => this.renderCharts())
-
                     } catch (e) {
                         this.error = e.message
                     } finally {
@@ -511,147 +415,101 @@
                 },
 
                 renderCharts() {
-                    const layout = (title) => ({
+                    const layout = () => ({
                         paper_bgcolor: 'transparent',
                         plot_bgcolor : 'transparent',
-                        font         : { color: '#9ca3af', size: 11, family: 'Inter' },
-                        margin       : { t: 10, r: 10, b: 40, l: 40 },
+                        font         : { color: '#9ca3af', size: 10, family: 'Space Grotesk' },
+                        margin       : { t: 10, r: 10, b: 36, l: 36 },
                         showlegend   : false,
-                        xaxis        : { gridcolor: '#ffffff08', linecolor: '#ffffff10' },
-                        yaxis        : { gridcolor: '#ffffff08', linecolor: '#ffffff10' },
+                        xaxis        : { gridcolor: '#ffffff08', linecolor: '#ffffff10', tickfont: { size: 9 } },
+                        yaxis        : { gridcolor: '#ffffff08', linecolor: '#ffffff10', tickfont: { size: 9 } },
                     })
-
                     const config = { displayModeBar: false, responsive: true }
 
-                    // Rating Distribution
-                    if (this.result.stats.descriptive) {
-                        const ratingData = this.result.profile.category_distribution || {}
-                        const numStats   = this.result.stats.descriptive
-                        const cols       = Object.keys(numStats)
-
+                    if (this.result.stats && this.result.stats.descriptive) {
+                        const numStats = this.result.stats.descriptive
+                        const cols = Object.keys(numStats)
                         if (cols.length > 0) {
-                            const col  = cols[0]
-                            const stat = numStats[col]
+                            const col = cols[0], stat = numStats[col]
                             Plotly.newPlot('chart-rating', [{
-                                x   : ['min', '25%', '50% (median)', '75%', 'max'],
-                                y   : [stat.min, stat['25%'], stat['50%'], stat['75%'], stat.max],
+                                x: ['Min','Q1','Median','Q3','Max'],
+                                y: [stat.min, stat['25%'], stat['50%'], stat['75%'], stat.max],
                                 type: 'bar',
-                                marker: { color: ['#ff4757','#ffa502','#00d4ff','#ffa502','#00ff88'] }
-                            }], { ...layout(), title: null }, config)
+                                marker: { color: ['#ff4757','#ffa502','#00d4ff','#ffa502','#00ff88'], opacity: 0.85 }
+                            }], layout(), config)
                         }
                     }
 
-                    // Sentiment Donut
-                    if (this.result.sentiment.distribution) {
-                        const dist   = this.result.sentiment.distribution
-                        const labels = Object.keys(dist)
-                        const values = Object.values(dist)
+                    if (this.result.sentiment && this.result.sentiment.distribution) {
+                        const dist = this.result.sentiment.distribution
+                        const labels = Object.keys(dist), values = Object.values(dist)
                         const colors = { positive: '#00ff88', negative: '#ff4757', neutral: '#ffa502' }
-
                         Plotly.newPlot('chart-sentiment', [{
-                            type     : 'pie',
-                            hole     : 0.6,
-                            labels   : labels,
-                            values   : values,
-                            textinfo : 'label+percent',
-                            marker   : { colors: labels.map(l => colors[l] || '#888') }
-                        }], { ...layout(), showlegend: true,
-                              legend: { font: { color: '#9ca3af', size: 10 } } }, config)
+                            type: 'pie', hole: 0.62, labels, values,
+                            textinfo: 'label+percent', textfont: { size: 10 },
+                            marker: { colors: labels.map(l => colors[l] || '#888') }
+                        }], { ...layout(), showlegend: true, legend: { font: { color: '#9ca3af', size: 9 } } }, config)
                     }
 
-                    // Aspect Bar
-                    if (this.result.sentiment.aspect_summary) {
-                        const aspects  = Object.keys(this.result.sentiment.aspect_summary)
-                        const pos      = aspects.map(a => this.result.sentiment.aspect_summary[a].positive || 0)
-                        const neu      = aspects.map(a => this.result.sentiment.aspect_summary[a].neutral  || 0)
-                        const neg      = aspects.map(a => this.result.sentiment.aspect_summary[a].negative || 0)
-
+                    if (this.result.sentiment && this.result.sentiment.aspect_summary) {
+                        const aspects = Object.keys(this.result.sentiment.aspect_summary)
+                        const pos = aspects.map(a => this.result.sentiment.aspect_summary[a].positive || 0)
+                        const neu = aspects.map(a => this.result.sentiment.aspect_summary[a].neutral  || 0)
+                        const neg = aspects.map(a => this.result.sentiment.aspect_summary[a].negative || 0)
                         Plotly.newPlot('chart-aspect', [
-                            { name: 'positive', x: aspects, y: pos, type: 'bar', marker: { color: '#00ff88' } },
-                            { name: 'neutral',  x: aspects, y: neu, type: 'bar', marker: { color: '#ffa502' } },
-                            { name: 'negative', x: aspects, y: neg, type: 'bar', marker: { color: '#ff4757' } },
-                        ], { ...layout(), barmode: 'group', showlegend: true,
-                             legend: { font: { color: '#9ca3af', size: 10 } } }, config)
+                            { name: 'Positive', x: aspects, y: pos, type: 'bar', marker: { color: '#00ff88', opacity: 0.85 } },
+                            { name: 'Neutral',  x: aspects, y: neu, type: 'bar', marker: { color: '#ffa502', opacity: 0.85 } },
+                            { name: 'Negative', x: aspects, y: neg, type: 'bar', marker: { color: '#ff4757', opacity: 0.85 } },
+                        ], { ...layout(), barmode: 'group', showlegend: true, legend: { font: { color: '#9ca3af', size: 9 } } }, config)
                     }
 
-                    // Keywords
-                    if (this.result.sentiment.top_keywords) {
-                        const kw   = this.result.sentiment.top_keywords.slice(0, 15)
-                        const keys = kw.map(k => k[0])
-                        const freq = kw.map(k => k[1])
-
+                    if (this.result.sentiment && this.result.sentiment.top_keywords) {
+                        const kw = this.result.sentiment.top_keywords.slice(0, 12)
                         Plotly.newPlot('chart-keywords', [{
-                            x          : freq,
-                            y          : keys,
-                            type       : 'bar',
-                            orientation: 'h',
-                            marker     : { color: '#00d4ff' }
-                        }], { ...layout(), yaxis: { autorange: 'reversed', gridcolor: '#ffffff08' } }, config)
+                            x: kw.map(k => k[1]), y: kw.map(k => k[0]),
+                            type: 'bar', orientation: 'h',
+                            marker: { color: '#00d4ff', opacity: 0.8 }
+                        }], { ...layout(), yaxis: { autorange: 'reversed', gridcolor: '#ffffff08', tickfont: { size: 9 } } }, config)
                     }
 
-                    // Anomaly
                     if (Object.keys(this.result.anomalies).length > 0) {
-                        const col     = Object.keys(this.result.anomalies)[0]
-                        const info    = this.result.anomalies[col]
-                        const aidx    = info.records.map(r => r.index)
-                        const aval    = info.records.map(r => r.value)
-                        const allIdx  = Array.from({ length: this.result.profile.shape.rows }, (_, i) => i)
+                        const col = Object.keys(this.result.anomalies)[0]
+                        const info = this.result.anomalies[col]
+                        const aidx = info.records.map(r => r.index)
+                        const aval = info.records.map(r => r.value)
+                        const allIdx = Array.from({ length: this.result.profile.shape.rows }, (_, i) => i)
                         const normIdx = allIdx.filter(i => !aidx.includes(i))
-
                         Plotly.newPlot('chart-anomaly', [
-                            { x: normIdx, y: normIdx.map(() => null), mode: 'markers',
-                              name: 'normal', marker: { color: '#00d4ff', size: 3, opacity: 0.5 } },
-                            { x: aidx, y: aval, mode: 'markers',
-                              name: 'anomaly', marker: { color: '#ff4757', size: 8, symbol: 'x' } }
+                            { x: normIdx, y: normIdx.map(() => null), mode: 'markers', name: 'Normal', marker: { color: '#00d4ff', size: 3, opacity: 0.4 } },
+                            { x: aidx, y: aval, mode: 'markers', name: 'Anomaly', marker: { color: '#ff4757', size: 8, symbol: 'x' } }
                         ], layout(), config)
                     }
 
-                    // 3D Scatter — placeholder jika tidak ada data cukup
                     Plotly.newPlot('chart-3d', [{
-                        type: 'scatter3d',
-                        mode: 'markers',
-                        x   : [1,2,3,4,5],
-                        y   : [0.2,0.5,0.7,0.8,0.9],
-                        z   : [100,200,300,400,500],
-                        marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 5 }
+                        type: 'scatter3d', mode: 'markers',
+                        x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500],
+                        marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 5, opacity: 0.85 }
                     }], {
                         paper_bgcolor: 'transparent',
-                        scene: {
-                            bgcolor: 'transparent',
-                            xaxis: { gridcolor: '#ffffff10', title: 'Rating' },
-                            yaxis: { gridcolor: '#ffffff10', title: 'Sentiment' },
-                            zaxis: { gridcolor: '#ffffff10', title: 'Review Length' },
-                        },
-                        margin: { t: 0, r: 0, b: 0, l: 0 },
-                        font  : { color: '#9ca3af', size: 10 }
+                        scene: { bgcolor: 'transparent', xaxis: { gridcolor: '#ffffff10', title: { text: 'Rating', font: { size: 9 } } }, yaxis: { gridcolor: '#ffffff10', title: { text: 'Sentiment', font: { size: 9 } } }, zaxis: { gridcolor: '#ffffff10', title: { text: 'Length', font: { size: 9 } } } },
+                        margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
                     }, config)
 
-                    // Surface Plot — placeholder
                     Plotly.newPlot('chart-surface', [{
-                        type      : 'surface',
-                        colorscale: 'Teal',
-                        z         : [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]]
+                        type: 'surface', colorscale: 'Teal',
+                        z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]]
                     }], {
                         paper_bgcolor: 'transparent',
-                        scene: {
-                            bgcolor: 'transparent',
-                            xaxis: { gridcolor: '#ffffff10' },
-                            yaxis: { gridcolor: '#ffffff10' },
-                            zaxis: { gridcolor: '#ffffff10' },
-                        },
-                        margin: { t: 0, r: 0, b: 0, l: 0 },
-                        font  : { color: '#9ca3af', size: 10 }
+                        scene: { bgcolor: 'transparent', xaxis: { gridcolor: '#ffffff10' }, yaxis: { gridcolor: '#ffffff10' }, zaxis: { gridcolor: '#ffffff10' } },
+                        margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
                     }, config)
                 },
 
                 exportReport() {
-                    const content = JSON.stringify(this.result, null, 2)
-                    const blob    = new Blob([content], { type: 'application/json' })
-                    const url     = URL.createObjectURL(blob)
-                    const a       = document.createElement('a')
-                    a.href        = url
-                    a.download    = 'analysis-report.json'
-                    a.click()
+                    const blob = new Blob([JSON.stringify(this.result, null, 2)], { type: 'application/json' })
+                    const url  = URL.createObjectURL(blob)
+                    const a    = document.createElement('a')
+                    a.href = url; a.download = 'analysis-report.json'; a.click()
                     URL.revokeObjectURL(url)
                 }
             }
