@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -17,9 +19,7 @@
                     colors: {
                         dark: { 900: '#060612', 800: '#0c0c1e', 700: '#121228', 600: '#1a1a35', 500: '#22223f' },
                         accent: { DEFAULT: '#00d4ff', dim: '#0099bb', glow: 'rgba(0,212,255,0.15)' },
-                        positive: '#00ff88',
-                        negative: '#ff4757',
-                        neutral: '#ffa502',
+                        positive: '#00ff88', negative: '#ff4757', neutral: '#ffa502',
                     }
                 }
             }
@@ -31,16 +31,7 @@
         ::-webkit-scrollbar { width: 3px; height: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #00d4ff33; border-radius: 2px; }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-            z-index: 0;
-        }
+        body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
         .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.07); }
         .glass-strong { background: rgba(0,212,255,0.04); backdrop-filter: blur(20px); border: 1px solid rgba(0,212,255,0.15); }
         .btn-primary { background: linear-gradient(135deg, #00d4ff, #0099bb); transition: all 0.2s ease; }
@@ -64,6 +55,8 @@
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); } 70% { box-shadow: 0 0 0 6px rgba(0,255,136,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0); } }
         .mobile-nav { display: none; }
         .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 25; backdrop-filter: blur(4px); }
+        .history-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); transition: all 0.2s ease; }
+        .history-card:hover { border-color: rgba(0,212,255,0.2); box-shadow: 0 0 16px rgba(0,212,255,0.05); }
         @media (max-width: 768px) {
             .sidebar-desktop { transform: translateX(-100%); transition: transform 0.3s ease; }
             .sidebar-desktop.open { transform: translateX(0); }
@@ -120,6 +113,10 @@
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
                     Charts
                 </button>
+                <button @click="activeSection = 'history'; sidebarOpen = false; loadHistory()" :class="activeSection === 'history' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                    History
+                </button>
             </nav>
             <div class="px-4 py-4 border-t border-white border-opacity-5">
                 <div class="glass rounded-xl px-3 py-2.5 flex items-center gap-2.5">
@@ -150,10 +147,16 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <template x-if="result">
-                        <button @click="exportReport()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-accent border border-accent border-opacity-30 hover:bg-accent hover:bg-opacity-10 transition-all flex items-center gap-1.5">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                            <span class="hidden sm:inline">Export</span>
-                        </button>
+                        <div class="flex gap-2">
+                            <button @click="exportPDF()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 border border-red-400 border-opacity-30 hover:bg-red-400 hover:bg-opacity-10 transition-all flex items-center gap-1.5">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+                                <span class="hidden sm:inline">PDF</span>
+                            </button>
+                            <button @click="exportReport()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-accent border border-accent border-opacity-30 hover:bg-accent hover:bg-opacity-10 transition-all flex items-center gap-1.5">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                <span class="hidden sm:inline">JSON</span>
+                            </button>
+                        </div>
                     </template>
                     <div class="w-8 h-8 rounded-lg glass-strong flex items-center justify-center text-xs font-bold text-accent font-mono">AI</div>
                 </div>
@@ -161,6 +164,17 @@
 
             <div class="p-desktop p-6">
 
+                <!-- Telegram ID Input -->
+                <div x-show="activeSection === 'upload' || activeSection === 'dashboard'" class="mb-4">
+                    <div class="glass rounded-xl px-4 py-3 flex items-center gap-3">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#00d4ff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                        <input type="text" x-model="telegramId" placeholder="Telegram ID (opsional) — hasil analisis akan dikirim ke Telegram"
+                               class="flex-1 bg-transparent text-xs text-gray-300 placeholder-gray-600 outline-none" />
+                        <span x-show="telegramId" class="text-xs text-green-400">✓</span>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
                 <div x-show="activeSection === 'upload' || activeSection === 'dashboard'" class="fade-in">
                     <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer mb-5"
                          @click="$refs.fileInput.click()"
@@ -224,6 +238,7 @@
                     </template>
                 </div>
 
+                <!-- Charts Section -->
                 <template x-if="result && (activeSection === 'charts' || activeSection === 'dashboard')">
                     <div class="fade-in space-y-4">
                         <p class="section-label text-gray-600">Visualizations</p>
@@ -264,6 +279,7 @@
                     </div>
                 </template>
 
+                <!-- AI Insight Section -->
                 <template x-if="result && (activeSection === 'insight' || activeSection === 'dashboard')">
                     <div class="fade-in space-y-4 mt-4">
                         <p class="section-label text-gray-600">AI Analysis</p>
@@ -303,6 +319,65 @@
                     </div>
                 </template>
 
+                <!-- History Section -->
+                <template x-if="activeSection === 'history'">
+                    <div class="fade-in space-y-4">
+                        <div class="flex items-center justify-between">
+                            <p class="section-label text-gray-600">Analysis History</p>
+                            <button @click="loadHistory()" class="text-xs text-accent hover:text-accent-dim transition-colors flex items-center gap-1">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                Refresh
+                            </button>
+                        </div>
+
+                        <template x-if="historyLoading">
+                            <div class="flex justify-center py-10">
+                                <div class="spinner"></div>
+                            </div>
+                        </template>
+
+                        <template x-if="!historyLoading && historyList.length === 0">
+                            <div class="flex flex-col items-center justify-center py-20 text-center">
+                                <div class="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-4 text-gray-600">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                                </div>
+                                <p class="text-sm font-semibold text-gray-400">Belum ada history</p>
+                                <p class="text-xs text-gray-600 mt-1">Upload CSV dan jalankan analisis dulu</p>
+                            </div>
+                        </template>
+
+                        <template x-if="!historyLoading && historyList.length > 0">
+                            <div class="space-y-3">
+                                <template x-for="item in historyList" :key="item.id">
+                                    <div class="history-card rounded-xl p-4">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="flex-1 cursor-pointer" @click="loadFromHistory(item)">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#00d4ff"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                                                    <p class="text-sm font-semibold text-white" x-text="item.filename"></p>
+                                                </div>
+                                                <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                    <span x-text="new Date(item.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})"></span>
+                                                </div>
+                                                <div class="flex items-center gap-3 mt-2">
+                                                    <span class="text-xs num text-gray-400"><span class="text-white" x-text="item.total_rows"></span> rows</span>
+                                                    <span class="text-xs num text-gray-400"><span class="text-white" x-text="item.total_columns"></span> cols</span>
+                                                    <span class="text-xs num" :class="item.anomalies > 0 ? 'text-red-400' : 'text-green-400'"><span x-text="item.anomalies"></span> anomali</span>
+                                                    <span class="text-xs num text-green-400"><span x-text="item.sentiment_positive"></span> pos</span>
+                                                </div>
+                                            </div>
+                                            <button @click="deleteHistory(item.id)" class="text-gray-600 hover:text-red-400 transition-colors flex-shrink-0 p-1">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Empty state -->
                 <template x-if="!result && (activeSection === 'insight' || activeSection === 'charts')">
                     <div class="fade-in flex flex-col items-center justify-center py-20 text-center">
                         <div class="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-4 text-gray-600">
@@ -316,23 +391,27 @@
 
             </div>
 
-            <nav class="mobile-nav fixed bottom-0 left-0 right-0 z-20 px-4 py-2 justify-around items-center"
+            <nav class="mobile-nav fixed bottom-0 left-0 right-0 z-20 px-2 py-2 justify-around items-center"
                  style="background: rgba(8,8,22,0.95); border-top: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px);">
-                <button @click="activeSection = 'dashboard'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'dashboard' ? 'text-accent' : 'text-gray-500'">
+                <button @click="activeSection = 'dashboard'" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'dashboard' ? 'text-accent' : 'text-gray-500'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                     <span class="text-xs">Dashboard</span>
                 </button>
-                <button @click="activeSection = 'upload'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'upload' ? 'text-accent' : 'text-gray-500'">
+                <button @click="activeSection = 'upload'" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'upload' ? 'text-accent' : 'text-gray-500'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
                     <span class="text-xs">Upload</span>
                 </button>
-                <button @click="activeSection = 'insight'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'insight' ? 'text-accent' : 'text-gray-500'">
+                <button @click="activeSection = 'insight'" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'insight' ? 'text-accent' : 'text-gray-500'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
                     <span class="text-xs">Insight</span>
                 </button>
-                <button @click="activeSection = 'charts'" class="flex flex-col items-center gap-1 px-3 py-1" :class="activeSection === 'charts' ? 'text-accent' : 'text-gray-500'">
+                <button @click="activeSection = 'charts'" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'charts' ? 'text-accent' : 'text-gray-500'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
                     <span class="text-xs">Charts</span>
+                </button>
+                <button @click="activeSection = 'history'; loadHistory()" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'history' ? 'text-accent' : 'text-gray-500'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+                    <span class="text-xs">History</span>
                 </button>
             </nav>
             <div class="mobile-nav h-16"></div>
@@ -341,6 +420,8 @@
 
     <script>
         const API_BASE = 'https://businessanalytic.up.railway.app/api/v1'
+        const SUPABASE_URL = 'https://xabxhsextubffgukzwmc.supabase.co'
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYnhoc2V4dHViZmZndWt6d21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mjg1MDMsImV4cCI6MjA5MzEwNDUwM30.Rctq8NuRiblEkycni2AKx0GOaK67XKX0_Kleo563T-w'
 
         function app() {
             return {
@@ -351,6 +432,9 @@
                 result        : null,
                 apiStatus     : 'offline',
                 sidebarOpen   : false,
+                telegramId    : '',
+                historyList   : [],
+                historyLoading: false,
 
                 async init() {
                     await this.checkApi()
@@ -360,17 +444,14 @@
                 async checkApi() {
                     try {
                         const res = await fetch('https://businessanalytic.up.railway.app/', {
-                            method: 'GET',
-                            signal: AbortSignal.timeout(5000)
+                            method: 'GET', signal: AbortSignal.timeout(5000)
                         })
                         this.apiStatus = res.ok ? 'online' : 'offline'
-                    } catch {
-                        this.apiStatus = 'offline'
-                    }
+                    } catch { this.apiStatus = 'offline' }
                 },
 
                 sectionTitle() {
-                    const map = { dashboard: 'Dashboard', upload: 'Upload Data', insight: 'AI Insight', charts: 'Charts' }
+                    const map = { dashboard: 'Dashboard', upload: 'Upload Data', insight: 'AI Insight', charts: 'Charts', history: 'History' }
                     return map[this.activeSection] || 'Dashboard'
                 },
 
@@ -407,6 +488,11 @@
                         this.apiStatus = 'online'
                         this.activeSection = 'dashboard'
                         this.$nextTick(() => this.renderCharts())
+
+                        // Auto-save & Telegram (parallel)
+                        this.saveToSupabase()
+                        if (this.telegramId) this.sendTelegram()
+
                     } catch (e) {
                         this.error = e.message
                     } finally {
@@ -414,15 +500,172 @@
                     }
                 },
 
+                async saveToSupabase() {
+                    try {
+                        const anomalyCount = Object.keys(this.result.anomalies).length > 0
+                            ? Object.values(this.result.anomalies)[0].count : 0
+                        const sentPos = this.result.sentiment.distribution
+                            ? this.result.sentiment.distribution.positive || 0 : 0
+
+                        await fetch(`${SUPABASE_URL}/rest/v1/analyses`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({
+                                filename: this.selectedFile.name,
+                                total_rows: this.result.profile.shape.rows,
+                                total_columns: this.result.profile.shape.columns,
+                                anomalies: anomalyCount,
+                                sentiment_positive: sentPos,
+                                result_json: this.result
+                            })
+                        })
+                    } catch(e) { console.error('Supabase save error:', e) }
+                },
+
+                async loadHistory() {
+                    this.historyLoading = true
+                    try {
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/analyses?select=id,created_at,filename,total_rows,total_columns,anomalies,sentiment_positive&order=created_at.desc&limit=20`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        })
+                        this.historyList = await res.json()
+                    } catch(e) { console.error('Load history error:', e) }
+                    finally { this.historyLoading = false }
+                },
+
+                async loadFromHistory(item) {
+                    try {
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/analyses?id=eq.${item.id}&select=result_json`, {
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        })
+                        const data = await res.json()
+                        if (data[0]) {
+                            this.result = data[0].result_json
+                            this.selectedFile = { name: item.filename, size: 0 }
+                            this.activeSection = 'dashboard'
+                            this.$nextTick(() => this.renderCharts())
+                        }
+                    } catch(e) { console.error('Load from history error:', e) }
+                },
+
+                async deleteHistory(id) {
+                    try {
+                        await fetch(`${SUPABASE_URL}/rest/v1/analyses?id=eq.${id}`, {
+                            method: 'DELETE',
+                            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        })
+                        this.historyList = this.historyList.filter(h => h.id !== id)
+                    } catch(e) { console.error('Delete history error:', e) }
+                },
+
+                async sendTelegram() {
+                    try {
+                        const anomalyCount = Object.keys(this.result.anomalies).length > 0
+                            ? Object.values(this.result.anomalies)[0].count : 0
+                        const anomalyPct = anomalyCount > 0
+                            ? ((anomalyCount / this.result.profile.shape.rows) * 100).toFixed(1) : 0
+                        const sentDist = this.result.sentiment.distribution || {}
+                        const keywords = this.result.sentiment.top_keywords
+                            ? this.result.sentiment.top_keywords.slice(0,5).map(k => k[0]).join(', ') : '-'
+
+                        const msg = `🤖 *BizAnalytic Report*\n\n` +
+                            `📁 File: ${this.selectedFile.name}\n` +
+                            `📊 Total Rows: ${this.result.profile.shape.rows.toLocaleString()}\n` +
+                            `📋 Columns: ${this.result.profile.shape.columns}\n\n` +
+                            `${anomalyCount > 0 ? '⚠️' : '✅'} Anomalies: ${anomalyCount} (${anomalyPct}%)${anomalyCount > 0 ? ' — PERLU PERHATIAN!' : ''}\n` +
+                            `💚 Positive: ${sentDist.positive || 0}\n` +
+                            `❤️ Negative: ${sentDist.negative || 0}\n` +
+                            `💛 Neutral: ${sentDist.neutral || 0}\n\n` +
+                            `🔑 Keywords: ${keywords}\n\n` +
+                            `💡 *Summary:*\n${this.result.insight.summary}\n\n` +
+                            `📅 ${new Date().toLocaleString('id-ID')}`
+
+                        await fetch(`${API_BASE}/telegram`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ chat_id: this.telegramId, message: msg })
+                        })
+                    } catch(e) { console.error('Telegram error:', e) }
+                },
+
+                async exportPDF() {
+                    const { jsPDF } = window.jspdf
+                    const doc = new jsPDF()
+                    const filename = this.selectedFile ? this.selectedFile.name : 'analysis'
+                    const date = new Date().toLocaleDateString('id-ID')
+                    const anomalyCount = Object.keys(this.result.anomalies).length > 0
+                        ? Object.values(this.result.anomalies)[0].count : 0
+                    const sentDist = this.result.sentiment.distribution || {}
+
+                    // Header
+                    doc.setFillColor(6, 6, 18)
+                    doc.rect(0, 0, 210, 297, 'F')
+                    doc.setTextColor(0, 212, 255)
+                    doc.setFontSize(20)
+                    doc.setFont('helvetica', 'bold')
+                    doc.text('BizAnalytic Report', 20, 25)
+                    doc.setTextColor(150, 150, 150)
+                    doc.setFontSize(10)
+                    doc.setFont('helvetica', 'normal')
+                    doc.text(`File: ${filename}  |  Date: ${date}`, 20, 35)
+
+                    // KPI
+                    doc.setTextColor(0, 212, 255)
+                    doc.setFontSize(12)
+                    doc.setFont('helvetica', 'bold')
+                    doc.text('OVERVIEW', 20, 50)
+                    doc.setTextColor(255, 255, 255)
+                    doc.setFontSize(10)
+                    doc.setFont('helvetica', 'normal')
+                    doc.text(`Total Rows: ${this.result.profile.shape.rows.toLocaleString()}`, 20, 60)
+                    doc.text(`Columns: ${this.result.profile.shape.columns}`, 20, 68)
+                    doc.text(`Anomalies: ${anomalyCount}`, 20, 76)
+                    doc.text(`Sentiment Positive: ${sentDist.positive || 'N/A'}`, 20, 84)
+
+                    // Insight sections
+                    let y = 100
+                    const sections = [
+                        { label: 'SUMMARY', key: 'summary', color: [0, 212, 255] },
+                        { label: 'ANOMALY FLAGS', key: 'anomaly_flags', color: [255, 71, 87] },
+                        { label: 'SENTIMENT ANALYSIS', key: 'sentiment', color: [255, 165, 2] },
+                        { label: 'RECOMMENDATIONS', key: 'recommendations', color: [0, 255, 136] },
+                        { label: 'STRATEGY', key: 'strategy', color: [0, 212, 255] },
+                    ]
+
+                    for (const s of sections) {
+                        if (y > 260) { doc.addPage(); doc.setFillColor(6,6,18); doc.rect(0,0,210,297,'F'); y = 20 }
+                        doc.setTextColor(...s.color)
+                        doc.setFontSize(11)
+                        doc.setFont('helvetica', 'bold')
+                        doc.text(s.label, 20, y)
+                        y += 8
+                        doc.setTextColor(200, 200, 200)
+                        doc.setFontSize(9)
+                        doc.setFont('helvetica', 'normal')
+                        const lines = doc.splitTextToSize(this.result.insight[s.key] || '-', 170)
+                        for (const line of lines) {
+                            if (y > 280) { doc.addPage(); doc.setFillColor(6,6,18); doc.rect(0,0,210,297,'F'); y = 20 }
+                            doc.text(line, 20, y)
+                            y += 6
+                        }
+                        y += 8
+                    }
+
+                    doc.save(`bizanalytic-${filename}-${date}.pdf`)
+                },
+
                 renderCharts() {
                     const layout = () => ({
-                        paper_bgcolor: 'transparent',
-                        plot_bgcolor : 'transparent',
-                        font         : { color: '#9ca3af', size: 10, family: 'Space Grotesk' },
-                        margin       : { t: 10, r: 10, b: 36, l: 36 },
-                        showlegend   : false,
-                        xaxis        : { gridcolor: '#ffffff08', linecolor: '#ffffff10', tickfont: { size: 9 } },
-                        yaxis        : { gridcolor: '#ffffff08', linecolor: '#ffffff10', tickfont: { size: 9 } },
+                        paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+                        font: { color: '#9ca3af', size: 10, family: 'Space Grotesk' },
+                        margin: { t: 10, r: 10, b: 36, l: 36 }, showlegend: false,
+                        xaxis: { gridcolor: '#ffffff08', linecolor: '#ffffff10', tickfont: { size: 9 } },
+                        yaxis: { gridcolor: '#ffffff08', linecolor: '#ffffff10', tickfont: { size: 9 } },
                     })
                     const config = { displayModeBar: false, responsive: true }
 
@@ -434,8 +677,7 @@
                             Plotly.newPlot('chart-rating', [{
                                 x: ['Min','Q1','Median','Q3','Max'],
                                 y: [stat.min, stat['25%'], stat['50%'], stat['75%'], stat.max],
-                                type: 'bar',
-                                marker: { color: ['#ff4757','#ffa502','#00d4ff','#ffa502','#00ff88'], opacity: 0.85 }
+                                type: 'bar', marker: { color: ['#ff4757','#ffa502','#00d4ff','#ffa502','#00ff88'], opacity: 0.85 }
                             }], layout(), config)
                         }
                     }
@@ -466,8 +708,7 @@
                     if (this.result.sentiment && this.result.sentiment.top_keywords) {
                         const kw = this.result.sentiment.top_keywords.slice(0, 12)
                         Plotly.newPlot('chart-keywords', [{
-                            x: kw.map(k => k[0]), y: kw.map(k => k[1]),
-                            type: 'bar',
+                            x: kw.map(k => k[0]), y: kw.map(k => k[1]), type: 'bar',
                             marker: { color: '#00d4ff', opacity: 0.8 }
                         }], { ...layout(), xaxis: { tickangle: -45, gridcolor: '#ffffff08', tickfont: { size: 9 } } }, config)
                     }
@@ -477,100 +718,47 @@
                         const info = this.result.anomalies[col]
                         const aidx = info.records.map(r => r.index)
                         const aval = info.records.map(r => r.value)
-
                         const allRecords = this.result.sentiment.records || []
                         const normPoints = allRecords.filter(r => !aidx.includes(r.index))
-                        const normX      = normPoints.map(r => r.index)
-                        const normY      = normPoints.map(r => r.compound)
-
                         Plotly.newPlot('chart-anomaly', [
-                            { x: normX, y: normY, mode: 'markers', name: 'Normal',  marker: { color: '#00d4ff', size: 3, opacity: 0.4 } },
-                            { x: aidx,  y: aval,  mode: 'markers', name: 'Anomaly', marker: { color: '#ff4757', size: 8, symbol: 'x' } }
+                            { x: normPoints.map(r => r.index), y: normPoints.map(r => r.compound), mode: 'markers', name: 'Normal', marker: { color: '#00d4ff', size: 3, opacity: 0.4 } },
+                            { x: aidx, y: aval, mode: 'markers', name: 'Anomaly', marker: { color: '#ff4757', size: 8, symbol: 'x' } }
                         ], layout(), config)
                     }
 
-                    // 3D Scatter — compound vs pos vs neu, warna dari compound
-                    const recs3d = (this.result.sentiment && this.result.sentiment.records)
-                        ? this.result.sentiment.records
-                        : []
-
+                    const recs3d = (this.result.sentiment && this.result.sentiment.records) ? this.result.sentiment.records : []
                     if (recs3d.length > 0) {
-                        const x3d   = recs3d.map(r => r.compound)
-                        const y3d   = recs3d.map(r => r.pos)
-                        const z3d   = recs3d.map(r => r.neu)
-                        const col3d = recs3d.map(r => r.compound)
-
                         Plotly.newPlot('chart-3d', [{
                             type: 'scatter3d', mode: 'markers',
-                            x: x3d, y: y3d, z: z3d,
-                            marker: { color: col3d, colorscale: 'RdYlGn', size: 2, opacity: 0.7,
-                                      colorbar: { thickness: 8, len: 0.5 } }
+                            x: recs3d.map(r => r.compound), y: recs3d.map(r => r.pos), z: recs3d.map(r => r.neu),
+                            marker: { color: recs3d.map(r => r.compound), colorscale: 'RdYlGn', size: 2, opacity: 0.7, colorbar: { thickness: 8, len: 0.5 } }
                         }], {
                             paper_bgcolor: 'transparent',
-                            scene: {
-                                bgcolor: 'transparent',
-                                xaxis: { gridcolor: '#ffffff10', title: { text: 'Compound', font: { size: 9, color: '#9ca3af' } } },
-                                yaxis: { gridcolor: '#ffffff10', title: { text: 'Positive',  font: { size: 9, color: '#9ca3af' } } },
-                                zaxis: { gridcolor: '#ffffff10', title: { text: 'Neutral',   font: { size: 9, color: '#9ca3af' } } }
-                            },
-                            margin: { t: 0, r: 0, b: 0, l: 0 },
-                            font: { color: '#9ca3af', size: 9 }
+                            scene: { bgcolor: 'transparent', xaxis: { gridcolor: '#ffffff10', title: { text: 'Compound', font: { size: 9, color: '#9ca3af' } } }, yaxis: { gridcolor: '#ffffff10', title: { text: 'Positive', font: { size: 9, color: '#9ca3af' } } }, zaxis: { gridcolor: '#ffffff10', title: { text: 'Neutral', font: { size: 9, color: '#9ca3af' } } } },
+                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
                         }, config)
 
-                        // Surface — bin compound vs pos, z = avg neu
-                        const bins  = 8
-                        const zGrid = []
+                        const bins = 8, zGrid = []
                         for (let i = 0; i < bins; i++) {
-                            const cMin = -1 + i * (2/bins)
-                            const cMax = -1 + (i+1) * (2/bins)
-                            const row  = []
+                            const cMin = -1 + i * (2/bins), cMax = -1 + (i+1) * (2/bins), row = []
                             for (let j = 0; j < bins; j++) {
-                                const pMin     = j / bins
-                                const pMax     = (j+1) / bins
-                                const filtered = recs3d.filter(r =>
-                                    r.compound >= cMin && r.compound < cMax &&
-                                    r.pos >= pMin && r.pos < pMax
-                                )
-                                row.push(filtered.length > 0
-                                    ? filtered.reduce((s, r) => s + r.neu, 0) / filtered.length
-                                    : null)
+                                const pMin = j/bins, pMax = (j+1)/bins
+                                const filtered = recs3d.filter(r => r.compound >= cMin && r.compound < cMax && r.pos >= pMin && r.pos < pMax)
+                                row.push(filtered.length > 0 ? filtered.reduce((s,r) => s+r.neu, 0)/filtered.length : null)
                             }
                             zGrid.push(row)
                         }
-
                         Plotly.newPlot('chart-surface', [{
                             type: 'surface', colorscale: 'Viridis', z: zGrid,
                             contours: { z: { show: true, usecolormap: true, highlightcolor: '#00d4ff', project: { z: true } } }
                         }], {
                             paper_bgcolor: 'transparent',
-                            scene: {
-                                bgcolor: 'transparent',
-                                xaxis: { gridcolor: '#ffffff10', title: { text: 'Pos Bin',      font: { size: 9, color: '#9ca3af' } } },
-                                yaxis: { gridcolor: '#ffffff10', title: { text: 'Compound Bin', font: { size: 9, color: '#9ca3af' } } },
-                                zaxis: { gridcolor: '#ffffff10', title: { text: 'Avg Neutral',  font: { size: 9, color: '#9ca3af' } } }
-                            },
-                            margin: { t: 0, r: 0, b: 0, l: 0 },
-                            font: { color: '#9ca3af', size: 9 }
+                            scene: { bgcolor: 'transparent', xaxis: { gridcolor: '#ffffff10', title: { text: 'Pos Bin', font: { size: 9, color: '#9ca3af' } } }, yaxis: { gridcolor: '#ffffff10', title: { text: 'Compound Bin', font: { size: 9, color: '#9ca3af' } } }, zaxis: { gridcolor: '#ffffff10', title: { text: 'Avg Neutral', font: { size: 9, color: '#9ca3af' } } } },
+                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
                         }, config)
-
                     } else {
-                        Plotly.newPlot('chart-3d', [{
-                            type: 'scatter3d', mode: 'markers',
-                            x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500],
-                            marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 4, opacity: 0.8 }
-                        }], {
-                            paper_bgcolor: 'transparent',
-                            scene: { bgcolor: 'transparent' },
-                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
-                        }, config)
-                        Plotly.newPlot('chart-surface', [{
-                            type: 'surface', colorscale: 'Viridis',
-                            z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]]
-                        }], {
-                            paper_bgcolor: 'transparent',
-                            scene: { bgcolor: 'transparent' },
-                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
-                        }, config)
+                        Plotly.newPlot('chart-3d', [{ type: 'scatter3d', mode: 'markers', x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500], marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 4, opacity: 0.8 } }], { paper_bgcolor: 'transparent', scene: { bgcolor: 'transparent' }, margin: { t:0,r:0,b:0,l:0 }, font: { color: '#9ca3af', size: 9 } }, config)
+                        Plotly.newPlot('chart-surface', [{ type: 'surface', colorscale: 'Viridis', z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]] }], { paper_bgcolor: 'transparent', scene: { bgcolor: 'transparent' }, margin: { t:0,r:0,b:0,l:0 }, font: { color: '#9ca3af', size: 9 } }, config)
                     }
                 },
 
