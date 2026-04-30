@@ -466,10 +466,10 @@
                     if (this.result.sentiment && this.result.sentiment.top_keywords) {
                         const kw = this.result.sentiment.top_keywords.slice(0, 12)
                         Plotly.newPlot('chart-keywords', [{
-                            x: kw.map(k => k[1]), y: kw.map(k => k[0]),
-                            type: 'bar', orientation: 'h',
+                            x: kw.map(k => k[0]), y: kw.map(k => k[1]),
+                            type: 'bar',
                             marker: { color: '#00d4ff', opacity: 0.8 }
-                        }], { ...layout(), yaxis: { autorange: 'reversed', gridcolor: '#ffffff08', tickfont: { size: 9 } } }, config)
+                        }], { ...layout(), xaxis: { tickangle: -45, gridcolor: '#ffffff08', tickfont: { size: 9 } } }, config)
                     }
 
                     if (Object.keys(this.result.anomalies).length > 0) {
