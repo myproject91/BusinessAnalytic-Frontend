@@ -473,36 +473,96 @@
                     }
 
                     if (Object.keys(this.result.anomalies).length > 0) {
-                        const col = Object.keys(this.result.anomalies)[0]
+                        const col  = Object.keys(this.result.anomalies)[0]
                         const info = this.result.anomalies[col]
                         const aidx = info.records.map(r => r.index)
                         const aval = info.records.map(r => r.value)
-                        const allIdx = Array.from({ length: this.result.profile.shape.rows }, (_, i) => i)
-                        const normIdx = allIdx.filter(i => !aidx.includes(i))
+
+                        const allRecords = this.result.sentiment.records || []
+                        const normPoints = allRecords.filter(r => !aidx.includes(r.index))
+                        const normX      = normPoints.map(r => r.index)
+                        const normY      = normPoints.map(r => r.compound)
+
                         Plotly.newPlot('chart-anomaly', [
-                            { x: normIdx, y: normIdx.map(() => null), mode: 'markers', name: 'Normal', marker: { color: '#00d4ff', size: 3, opacity: 0.4 } },
-                            { x: aidx, y: aval, mode: 'markers', name: 'Anomaly', marker: { color: '#ff4757', size: 8, symbol: 'x' } }
+                            { x: normX, y: normY, mode: 'markers', name: 'Normal',  marker: { color: '#00d4ff', size: 3, opacity: 0.4 } },
+                            { x: aidx,  y: aval,  mode: 'markers', name: 'Anomaly', marker: { color: '#ff4757', size: 8, symbol: 'x' } }
                         ], layout(), config)
                     }
 
-                    Plotly.newPlot('chart-3d', [{
-                        type: 'scatter3d', mode: 'markers',
-                        x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500],
-                        marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 5, opacity: 0.85 }
-                    }], {
-                        paper_bgcolor: 'transparent',
-                        scene: { bgcolor: 'transparent', xaxis: { gridcolor: '#ffffff10', title: { text: 'Rating', font: { size: 9 } } }, yaxis: { gridcolor: '#ffffff10', title: { text: 'Sentiment', font: { size: 9 } } }, zaxis: { gridcolor: '#ffffff10', title: { text: 'Length', font: { size: 9 } } } },
-                        margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
-                    }, config)
+                    // 3D Scatter — data real dari sentiment records
+                    if (this.result.sentiment && this.result.sentiment.records) {
+                        const recs    = this.result.sentiment.records
+                        const ratings = this.result.profile.columns_by_type.numeric
+                        const rCol    = ratings.length > 0 ? ratings[0] : null
 
-                    Plotly.newPlot('chart-surface', [{
-                        type: 'surface', colorscale: 'Teal',
-                        z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]]
-                    }], {
-                        paper_bgcolor: 'transparent',
-                        scene: { bgcolor: 'transparent', xaxis: { gridcolor: '#ffffff10' }, yaxis: { gridcolor: '#ffffff10' }, zaxis: { gridcolor: '#ffffff10' } },
-                        margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
-                    }, config)
+                        const x3d = recs.map(r => r.compound)
+                        const y3d = recs.map(r => r.pos)
+                        const z3d = recs.map(r => r.neg)
+                        const col3d = recs.map(r => r.compound)
+
+                        Plotly.newPlot('chart-3d', [{
+                            type: 'scatter3d', mode: 'markers',
+                            x: x3d, y: y3d, z: z3d,
+                            marker: { color: col3d, colorscale: 'RdYlGn', size: 3, opacity: 0.75 }
+                        }], {
+                            paper_bgcolor: 'transparent',
+                            scene: {
+                                bgcolor: 'transparent',
+                                xaxis: { gridcolor: '#ffffff10', title: { text: 'Compound', font: { size: 9 } } },
+                                yaxis: { gridcolor: '#ffffff10', title: { text: 'Positive',  font: { size: 9 } } },
+                                zaxis: { gridcolor: '#ffffff10', title: { text: 'Negative',  font: { size: 9 } } }
+                            },
+                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
+                        }, config)
+
+                        // Surface — grid compound vs pos vs neg
+                        const bins   = 5
+                        const zGrid  = []
+                        for (let i = 0; i < bins; i++) {
+                            const row = []
+                            for (let j = 0; j < bins; j++) {
+                                const filtered = recs.filter(r =>
+                                    r.compound >= (i/bins)*2-1 && r.compound < ((i+1)/bins)*2-1 &&
+                                    r.pos >= j/bins && r.pos < (j+1)/bins
+                                )
+                                row.push(filtered.length > 0
+                                    ? filtered.reduce((s, r) => s + r.neg, 0) / filtered.length
+                                    : 0)
+                            }
+                            zGrid.push(row)
+                        }
+
+                        Plotly.newPlot('chart-surface', [{
+                            type: 'surface', colorscale: 'Teal', z: zGrid
+                        }], {
+                            paper_bgcolor: 'transparent',
+                            scene: {
+                                bgcolor: 'transparent',
+                                xaxis: { gridcolor: '#ffffff10', title: { text: 'Pos Bin', font: { size: 9 } } },
+                                yaxis: { gridcolor: '#ffffff10', title: { text: 'Compound Bin', font: { size: 9 } } },
+                                zaxis: { gridcolor: '#ffffff10', title: { text: 'Avg Neg', font: { size: 9 } } }
+                            },
+                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
+                        }, config)
+                    } else {
+                        Plotly.newPlot('chart-3d', [{
+                            type: 'scatter3d', mode: 'markers',
+                            x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500],
+                            marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 4, opacity: 0.8 }
+                        }], {
+                            paper_bgcolor: 'transparent',
+                            scene: { bgcolor: 'transparent' },
+                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
+                        }, config)
+                        Plotly.newPlot('chart-surface', [{
+                            type: 'surface', colorscale: 'Teal',
+                            z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]]
+                        }], {
+                            paper_bgcolor: 'transparent',
+                            scene: { bgcolor: 'transparent' },
+                            margin: { t: 0, r: 0, b: 0, l: 0 }, font: { color: '#9ca3af', size: 9 }
+                        }, config)
+                    }
                 },
 
                 exportReport() {
