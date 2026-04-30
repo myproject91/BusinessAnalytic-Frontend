@@ -575,15 +575,12 @@
 
                         const msg = `🤖 *BizAnalytic Report*\n\n` +
                             `📁 File: ${this.selectedFile.name}\n` +
-                            `📊 Total Rows: ${this.result.profile.shape.rows.toLocaleString()}\n` +
-                            `📋 Columns: ${this.result.profile.shape.columns}\n\n` +
-                            `${anomalyCount > 0 ? '⚠️' : '✅'} Anomalies: ${anomalyCount} (${anomalyPct}%)${anomalyCount > 0 ? ' — PERLU PERHATIAN!' : ''}\n` +
-                            `💚 Positive: ${sentDist.positive || 0}\n` +
-                            `❤️ Negative: ${sentDist.negative || 0}\n` +
-                            `💛 Neutral: ${sentDist.neutral || 0}\n\n` +
-                            `🔑 Keywords: ${keywords}\n\n` +
+                            `📊 Rows: ${this.result.profile.shape.rows.toLocaleString()} | Columns: ${this.result.profile.shape.columns}\n\n` +
+                            `${anomalyCount > 0 ? '⚠️' : 'OK'} Anomalies: ${anomalyCount} (${anomalyPct}%)${anomalyCount > 0 ? ' — PERLU PERHATIAN!' : ''}\n` +
+                            `Positive: ${sentDist.positive || 0} | Negative: ${sentDist.negative || 0} | Neutral: ${sentDist.neutral || 0}\n\n` +
+                            `Keywords: ${keywords}\n\n` +
                             `💡 *Summary:*\n${this.result.insight.summary}\n\n` +
-                            `📅 ${new Date().toLocaleString('id-ID')}`
+                            `${new Date().toLocaleString('id-ID')}`
 
                         await fetch(`${API_BASE}/telegram`, {
                             method: 'POST',
