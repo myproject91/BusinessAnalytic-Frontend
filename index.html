@@ -494,7 +494,7 @@
     <script>
         // Auth check
         const session = localStorage.getItem("sb_session")
-        if (!session) window.location.href = "/login"
+        if (!session) window.location.href = "/auth.html"
         const currentUser = JSON.parse(localStorage.getItem("sb_user") || "{}")
 
         const API_BASE = 'https://businessanalytic.up.railway.app/api/v1'
@@ -844,7 +844,7 @@
                 logout() {
                     localStorage.removeItem("sb_session")
                     localStorage.removeItem("sb_user")
-                    window.location.href = "/login"
+                    window.location.href = "/auth.html"
                 },
 
                 exportReport() {
