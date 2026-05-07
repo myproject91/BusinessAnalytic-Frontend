@@ -162,6 +162,7 @@
                             </button>
                         </div>
                     </template>
+                    <button onclick="logout()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 border border-white border-opacity-10 hover:text-red-400 hover:border-red-400 hover:border-opacity-30 transition-all">Logout</button>
                     <div class="w-8 h-8 rounded-lg glass-strong flex items-center justify-center text-xs font-bold text-accent font-mono">AI</div>
                 </div>
             </header>
@@ -491,6 +492,11 @@
     </div>
 
     <script>
+        // Auth check
+        const session = localStorage.getItem("sb_session")
+        if (!session) window.location.href = "/login"
+        const currentUser = JSON.parse(localStorage.getItem("sb_user") || "{}")
+
         const API_BASE = 'https://businessanalytic.up.railway.app/api/v1'
         const SUPABASE_URL = 'https://xabxhsextubffgukzwmc.supabase.co'
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYnhoc2V4dHViZmZndWt6d21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mjg1MDMsImV4cCI6MjA5MzEwNDUwM30.Rctq8NuRiblEkycni2AKx0GOaK67XKX0_Kleo563T-w'
@@ -833,6 +839,12 @@
                         Plotly.newPlot('chart-3d', [{ type: 'scatter3d', mode: 'markers', x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500], marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 4, opacity: 0.8 } }], { paper_bgcolor: 'transparent', scene: { bgcolor: 'transparent' }, margin: { t:0,r:0,b:0,l:0 }, font: { color: '#9ca3af', size: 9 } }, config)
                         Plotly.newPlot('chart-surface', [{ type: 'surface', colorscale: 'Viridis', z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]] }], { paper_bgcolor: 'transparent', scene: { bgcolor: 'transparent' }, margin: { t:0,r:0,b:0,l:0 }, font: { color: '#9ca3af', size: 9 } }, config)
                     }
+                },
+
+                logout() {
+                    localStorage.removeItem("sb_session")
+                    localStorage.removeItem("sb_user")
+                    window.location.href = "/login"
                 },
 
                 exportReport() {
