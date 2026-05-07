@@ -672,6 +672,40 @@
                     } catch(e) { console.error('Telegram error:', e) }
                 },
 
+                  handleCliniqFile(e) {
+                      const f = e.target.files[0]
+                      if (f) { this.cliniqFile = f; this.cliniqDone = false; this.cliniqError = null }
+                  },
+                  handleCliniqDrop(e) {
+                      const f = e.dataTransfer.files[0]
+                      if (f && (f.name.endsWith('.csv') || f.name.endsWith('.pdf'))) {
+                          this.cliniqFile = f; this.cliniqDone = false; this.cliniqError = null
+                      }
+                  },
+                  async analyzeCliniq() {
+                      if (!this.cliniqFile || this.cliniqLoading) return
+                      this.cliniqLoading = true
+                      this.cliniqError   = null
+                      this.cliniqDone    = false
+                      const CLINIQ_URL   = 'https://cliniqu.up.railway.app'
+                      const endpoint     = this.cliniqFile.name.endsWith('.pdf') ? '/analyze/pdf' : '/analyze/csv'
+                      const form         = new FormData()
+                      form.append('file', this.cliniqFile)
+                      try {
+                          const res = await fetch(CLINIQ_URL + endpoint, { method: 'POST', body: form })
+                          if (!res.ok) throw new Error('Analisis gagal. Cek format file.')
+                          const blob = await res.blob()
+                          const url  = URL.createObjectURL(blob)
+                          const a    = document.createElement('a')
+                          a.href = url; a.download = 'ClinIQ_Report.pdf'; a.click()
+                          URL.revokeObjectURL(url)
+                          this.cliniqDone = true
+                      } catch(e) {
+                          this.cliniqError = e.message
+                      } finally {
+                          this.cliniqLoading = false
+                      }
+                  },
                 async exportPDF() {
                     const { jsPDF } = window.jspdf
                     const doc = new jsPDF()
