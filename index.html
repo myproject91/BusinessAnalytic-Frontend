@@ -382,7 +382,7 @@
                     </div>
                 </template>
 
- 
+
                <!-- ClinIQ Section -->
                <template x-if="activeSection === 'cliniqu'">
                    <div class="fade-in space-y-4">
@@ -497,9 +497,9 @@
         if (!session) window.location.href = "/auth.html"
         const currentUser = JSON.parse(localStorage.getItem("sb_user") || "{}")
 
-        const API_BASE = 'https://businessanalytic.up.railway.app/api/v1'
-        const SUPABASE_URL = 'https://xabxhsextubffgukzwmc.supabase.co'
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYnhoc2V4dHViZmZndWt6d21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mjg1MDMsImV4cCI6MjA5MzEwNDUwM30.Rctq8NuRiblEkycni2AKx0GOaK67XKX0_Kleo563T-w'
+        var API_BASE = 'https://businessanalytic.up.railway.app/api/v1'
+        var SUPABASE_URL = 'https://xabxhsextubffgukzwmc.supabase.co'
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYnhoc2V4dHViZmZndWt6d21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mjg1MDMsImV4cCI6MjA5MzEwNDUwM30.Rctq8NuRiblEkycni2AKx0GOaK67XKX0_Kleo563T-w'
 
         function app() {
             return {
