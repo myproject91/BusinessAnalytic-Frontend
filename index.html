@@ -525,7 +525,7 @@
 
                 async checkApi() {
                     try {
-                        const res = await fetch('https://businessanalytic-production.up.railway.app/', {
+                        const res = await fetch('https://businessanalytic-production.up.railway.app/api/v1/analyze', {
                             method: 'GET', signal: AbortSignal.timeout(5000)
                         })
                         this.apiStatus = res.ok ? 'online' : 'offline'
