@@ -113,11 +113,7 @@
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
                     Charts
                 </button>
-                <button @click="activeSection = 'cliniqu'; sidebarOpen = false" :class="activeSection === 'cliniqu' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
-                      ClinIQ
-                  </button>
-                  <button @click="activeSection = 'history'; sidebarOpen = false; loadHistory()" :class="activeSection === 'history' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
+                <button @click="activeSection = 'history'; sidebarOpen = false; loadHistory()" :class="activeSection === 'history' ? 'active' : ''" class="sidebar-link w-full text-left px-3 py-2.5 rounded-lg text-sm text-gray-400 flex items-center gap-3">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" class="flex-shrink-0"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
                     History
                 </button>
@@ -162,7 +158,6 @@
                             </button>
                         </div>
                     </template>
-                    <button @click="logout()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 border border-white border-opacity-10 hover:text-red-400 hover:border-red-400 hover:border-opacity-30 transition-all">Logout</button>
                     <div class="w-8 h-8 rounded-lg glass-strong flex items-center justify-center text-xs font-bold text-accent font-mono">AI</div>
                 </div>
             </header>
@@ -382,71 +377,7 @@
                     </div>
                 </template>
 
-
-               <!-- ClinIQ Section -->
-               <template x-if="activeSection === 'cliniqu'">
-                   <div class="fade-in space-y-4">
-                       <div class="flex items-center gap-3 mb-2">
-                           <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg, #0D6E7A, #1A9BAA); box-shadow: 0 0 16px rgba(13,110,122,0.4)">
-                               <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
-                           </div>
-                           <div>
-                               <p class="text-sm font-bold text-white">ClinIQ</p>
-                               <p class="text-xs text-gray-500 font-mono">Modern Care by AI Power Service</p>
-                           </div>
-                       </div>
-                       <div class="upload-zone rounded-2xl p-8 text-center cursor-pointer"
-                            @click="$refs.cliniqFile.click()"
-                            @dragover.prevent="$el.classList.add('drag-over')"
-                            @dragleave="$el.classList.remove('drag-over')"
-                            @drop.prevent="handleCliniqDrop($event)">
-                           <input type="file" accept=".csv,.pdf" x-ref="cliniqFile" @change="handleCliniqFile($event)" class="hidden">
-                           <div class="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center" style="background: linear-gradient(135deg, #0D6E7A, #5BC8D5); box-shadow: 0 0 20px rgba(13,110,122,0.3)">
-                               <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-                           </div>
-                           <template x-if="!cliniqFile">
-                               <div>
-                                   <p class="text-sm font-semibold text-gray-300">Drop CSV atau PDF catatan klinis</p>
-                                   <p class="text-xs text-gray-600 mt-1">Discharge Notes · ICU Notes · Outpatient Records</p>
-                               </div>
-                           </template>
-                           <template x-if="cliniqFile">
-                               <div>
-                                   <p class="text-sm font-bold text-white" x-text="cliniqFile.name"></p>
-                                   <p class="text-xs mt-1 num" style="color:#1A9BAA" x-text="formatFileSize(cliniqFile.size)"></p>
-                               </div>
-                           </template>
-                       </div>
-                       <button @click="analyzeCliniq()" :disabled="!cliniqFile || cliniqLoading"
-                               class="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
-                               style="background: linear-gradient(135deg, #0D6E7A, #1A9BAA); color: white;"
-                               :style="(!cliniqFile || cliniqLoading) ? 'opacity:0.4;cursor:not-allowed' : 'opacity:1'">
-                           <template x-if="cliniqLoading"><div class="spinner"></div></template>
-                           <span x-text="cliniqLoading ? 'Menganalisis...' : 'Analyze Clinical Notes'"></span>
-                       </button>
-                       <template x-if="cliniqError">
-                           <div class="rounded-xl p-4 text-sm" style="background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);color:#ff4757" x-text="cliniqError"></div>
-                       </template>
-                       <template x-if="cliniqDone">
-                           <div class="fade-in glass rounded-2xl p-5 text-center space-y-3" style="border-color:rgba(13,110,122,0.3)">
-                               <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center" style="background:rgba(13,110,122,0.2)">
-                                   <svg width="28" height="28" viewBox="0 0 24 24" fill="#1A9BAA"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-                               </div>
-                               <p class="text-sm font-bold text-white">Laporan Selesai!</p>
-                               <p class="text-xs text-gray-400">PDF ClinIQ sudah didownload otomatis</p>
-                               <button @click="cliniqDone=false;cliniqFile=null" class="px-4 py-2 rounded-lg text-xs font-semibold text-white" style="background:rgba(13,110,122,0.3);border:1px solid rgba(26,155,170,0.3)">Analisis Lagi</button>
-                           </div>
-                       </template>
-                       <div class="glass rounded-xl p-4 space-y-2" style="border-color:rgba(13,110,122,0.2)">
-                           <p class="section-label" style="color:#1A9BAA">Format CSV</p>
-                           <p class="text-xs text-gray-500 font-mono">note_id,text</p>
-                           <p class="text-xs text-gray-600 font-mono">N001,"Patient 65yo male, hypertension..."</p>
-                           <p class="text-xs text-gray-600 font-mono">N002,"ICU day 2, septic shock..."</p>
-                       </div>
-                   </div>
-               </template>
-
-               <!-- Empty state -->
+                <!-- Empty state -->
                 <template x-if="!result && (activeSection === 'insight' || activeSection === 'charts')">
                     <div class="fade-in flex flex-col items-center justify-center py-20 text-center">
                         <div class="w-14 h-14 rounded-2xl glass flex items-center justify-center mb-4 text-gray-600">
@@ -478,11 +409,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
                     <span class="text-xs">Charts</span>
                 </button>
-                <button @click="activeSection = 'cliniqu'" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'cliniqu' ? 'text-accent' : 'text-gray-500'">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"/></svg>
-                      <span class="text-xs">ClinIQ</span>
-                  </button>
-                  <button @click="activeSection = 'history'; loadHistory()" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'history' ? 'text-accent' : 'text-gray-500'">
+                <button @click="activeSection = 'history'; loadHistory()" class="flex flex-col items-center gap-1 px-2 py-1" :class="activeSection === 'history' ? 'text-accent' : 'text-gray-500'">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
                     <span class="text-xs">History</span>
                 </button>
@@ -492,14 +419,9 @@
     </div>
 
     <script>
-        // Auth check
-        const session = localStorage.getItem("sb_session")
-        if (!session) window.location.href = "/auth.html"
-        const currentUser = JSON.parse(localStorage.getItem("sb_user") || "{}")
-
-        var API_BASE = 'https://businessanalytic-production.up.railway.app/api/v1'
-        var SUPABASE_URL = 'https://xabxhsextubffgukzwmc.supabase.co'
-        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYnhoc2V4dHViZmZndWt6d21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mjg1MDMsImV4cCI6MjA5MzEwNDUwM30.Rctq8NuRiblEkycni2AKx0GOaK67XKX0_Kleo563T-w'
+        const API_BASE = 'https://businessanalytic-production.up.railway.app/api/v1'
+        const SUPABASE_URL = 'https://xabxhsextubffgukzwmc.supabase.co'
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhYnhoc2V4dHViZmZndWt6d21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1Mjg1MDMsImV4cCI6MjA5MzEwNDUwM30.Rctq8NuRiblEkycni2AKx0GOaK67XKX0_Kleo563T-w'
 
         function app() {
             return {
@@ -513,10 +435,6 @@
                 telegramId    : '',
                 historyList   : [],
                 historyLoading: false,
-                  cliniqFile    : null,
-                  cliniqLoading : false,
-                  cliniqError   : null,
-                  cliniqDone    : false,
 
                 async init() {
                     await this.checkApi()
@@ -533,7 +451,7 @@
                 },
 
                 sectionTitle() {
-                    const map = { dashboard: 'Dashboard', upload: 'Upload Data', insight: 'AI Insight', charts: 'Charts', history: 'History', cliniqu: 'ClinIQ' }
+                    const map = { dashboard: 'Dashboard', upload: 'Upload Data', insight: 'AI Insight', charts: 'Charts', history: 'History' }
                     return map[this.activeSection] || 'Dashboard'
                 },
 
@@ -566,7 +484,7 @@
                             const err = await res.json()
                             throw new Error(err.detail || 'Analysis failed')
                         }
-                        const text = await res.text(); this.result = JSON.parse(text)
+                        this.result = await res.json()
                         this.apiStatus = 'online'
                         this.activeSection = 'dashboard'
                         this.$nextTick(() => this.renderCharts())
@@ -672,40 +590,6 @@
                     } catch(e) { console.error('Telegram error:', e) }
                 },
 
-                  handleCliniqFile(e) {
-                      const f = e.target.files[0]
-                      if (f) { this.cliniqFile = f; this.cliniqDone = false; this.cliniqError = null }
-                  },
-                  handleCliniqDrop(e) {
-                      const f = e.dataTransfer.files[0]
-                      if (f && (f.name.endsWith('.csv') || f.name.endsWith('.pdf'))) {
-                          this.cliniqFile = f; this.cliniqDone = false; this.cliniqError = null
-                      }
-                  },
-                  async analyzeCliniq() {
-                      if (!this.cliniqFile || this.cliniqLoading) return
-                      this.cliniqLoading = true
-                      this.cliniqError   = null
-                      this.cliniqDone    = false
-                      const CLINIQ_URL   = 'https://cliniqu.up.railway.app'
-                      const endpoint     = this.cliniqFile.name.endsWith('.pdf') ? '/analyze/pdf' : '/analyze/csv'
-                      const form         = new FormData()
-                      form.append('file', this.cliniqFile)
-                      try {
-                          const res = await fetch(CLINIQ_URL + endpoint, { method: 'POST', body: form })
-                          if (!res.ok) throw new Error('Analisis gagal. Cek format file.')
-                          const blob = await res.blob()
-                          const url  = URL.createObjectURL(blob)
-                          const a    = document.createElement('a')
-                          a.href = url; a.download = 'ClinIQ_Report.pdf'; a.click()
-                          URL.revokeObjectURL(url)
-                          this.cliniqDone = true
-                      } catch(e) {
-                          this.cliniqError = e.message
-                      } finally {
-                          this.cliniqLoading = false
-                      }
-                  },
                 async exportPDF() {
                     const { jsPDF } = window.jspdf
                     const doc = new jsPDF()
@@ -873,12 +757,6 @@
                         Plotly.newPlot('chart-3d', [{ type: 'scatter3d', mode: 'markers', x: [1,2,3,4,5], y: [0.2,0.5,0.7,0.8,0.9], z: [100,200,300,400,500], marker: { color: [0.2,0.5,0.7,0.8,0.9], colorscale: 'RdYlGn', size: 4, opacity: 0.8 } }], { paper_bgcolor: 'transparent', scene: { bgcolor: 'transparent' }, margin: { t:0,r:0,b:0,l:0 }, font: { color: '#9ca3af', size: 9 } }, config)
                         Plotly.newPlot('chart-surface', [{ type: 'surface', colorscale: 'Viridis', z: [[0.1,0.3,0.5],[0.4,0.7,0.8],[0.6,0.8,0.95]] }], { paper_bgcolor: 'transparent', scene: { bgcolor: 'transparent' }, margin: { t:0,r:0,b:0,l:0 }, font: { color: '#9ca3af', size: 9 } }, config)
                     }
-                },
-
-                logout() {
-                    localStorage.removeItem("sb_session")
-                    localStorage.removeItem("sb_user")
-                    window.location.href = "/auth.html"
                 },
 
                 exportReport() {
